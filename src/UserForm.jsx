@@ -1,48 +1,72 @@
-import { PropTypes } from "prop-types";
-import { useState } from "react";
+import Stack from "@mui/material/Stack";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
 
-const UserForm = ({ setReloadUsers }) => {
-  const [formState, setFormState] = useState({
-    name: "",
-    email: "",
-    latitude: "",
-    longitude: "",
-  });
+import { PropTypes } from "prop-types";
+import { useEffect, useState } from "react";
+
+const UserForm = ({
+  open,
+  setOpen,
+  setReloadUsers,
+  selectedUser,
+  setSelectedUser,
+}) => {
+  const [full_name, setFullName] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [email, setEmail] = useState("");
 
   const clearForm = () => {
-    const newFormState = {
-      name: "",
-      email: "",
-      latitude: "",
-      longitude: "",
-    };
-
-    setFormState(newFormState);
+    setFullName("");
+    setLatitude("");
+    setLongitude("");
+    setEmail("");
   };
 
-  const handleFormChange = (event) => {
-    const {
-      target: { name, value },
-    } = event;
+  useEffect(() => {
+    if (selectedUser !== null) {
+      console.log(selectedUser);
+      setFullName(selectedUser.details.full_name);
+      setLatitude(selectedUser.details.latitude);
+      setLongitude(selectedUser.details.longitude);
+      setEmail(selectedUser.email);
+    } else {
+      clearForm();
+    }
+  }, [selectedUser]);
+  // const handleFormChange = (event) => {
+  //   const {
+  //     target: { name, value },
+  //   } = event;
 
-    const newFormState = {
-      ...formState,
-      [name]: value,
-    };
+  //   const newFormState = {
+  //     ...formState,
+  //     [name]: value,
+  //   };
 
-    setFormState(newFormState);
+  //   setFormState(newFormState);
+  // };
+
+  const handleClose = () => {
+    setOpen(false);
+    clearForm();
   };
 
   const handleSubmit = async () => {
-    Object.keys(formState).map((key) => {
-      if (!formState[key]) {
-        alert("tudos os campos são requeridos");
-        return;
-      }
-    });
-
     const body = {
-      ...formState,
+      email: email,
+      username: email,
+      details: {
+        full_name: full_name,
+        latitude: latitude,
+        longitude: longitude,
+      },
     };
 
     let content = {
@@ -54,15 +78,20 @@ const UserForm = ({ setReloadUsers }) => {
     };
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
-    let url = `${apiBaseUrl}/tasks/`;
+    let url = `${apiBaseUrl}/users/`;
+    if (selectedUser !== null) {
+      content.method = "PUT";
+      url = `${apiBaseUrl}/users/${selectedUser.id}/`;
+    }
 
     try {
       const response = await fetch(url, content);
       if (response.ok) {
         await response.json();
-        alert("Usuario criado com suceso");
+        setSelectedUser(null);
         setReloadUsers(new Date());
-        clearForm();
+        alert("Usuario cadastrado com suceso");
+        handleClose();
       } else {
         alert("Aconteceu um erro");
       }
@@ -72,68 +101,97 @@ const UserForm = ({ setReloadUsers }) => {
     }
   };
   return (
-    <div className='user-form'>
-      <div className='mb-3'>
-        <label htmlFor='userName' className='form-label'>
-          Nome de Usuario
-        </label>
-        <input
-          name='name'
-          value={formState.name}
-          className='form-control'
-          id='userName'
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className='mb-3'>
-        <label htmlFor='email' className='form-label'>
-          Email
-        </label>
-        <input
-          name='email'
-          value={formState.email}
-          className='form-control'
-          id='email'
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className='coord-wrapper d-flex'>
-        <div className='mb-3'>
-          <label htmlFor='latitude' className='form-label'>
-            Latitude
-          </label>
-          <input
-            name='latitude'
-            value={formState.latitude}
-            className='form-control'
-            id='latitude'
-            onChange={handleFormChange}
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      PaperProps={{
+        component: "form",
+        onSubmit: (event) => {
+          event.preventDefault();
+          const formData = new FormData(event.currentTarget);
+          const formJson = Object.fromEntries(formData.entries());
+          const email = formJson.email;
+          console.log(email);
+          // handleClose();
+        },
+      }}
+    >
+      <DialogTitle>Cadastrar novo usuario</DialogTitle>
+      <DialogContent>
+        <DialogContentText></DialogContentText>
+        <div className="user-form">
+          <TextField
+            id="userName"
+            label="Nome de Usuario"
+            variant="outlined"
+            margin="normal"
+            fullWidth
+            name="name"
+            value={full_name}
+            onChange={(event) => setFullName(event.target.value)}
           />
-        </div>
-        <div>
-          <label htmlFor='longitude' className='form-label'>
-            Longitude
-          </label>
-          <input
-            name='longitude'
-            value={formState.longitude}
-            className='form-control'
-            id='longitude'
-            onChange={handleFormChange}
+
+          <TextField
+            id="email"
+            label="Email"
+            variant="outlined"
+            margin="normal"
+            fullWidth
+            name="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
+
+          <Stack direction="row" spacing={2}>
+            <TextField
+              id="latitude"
+              label="Latitude"
+              variant="outlined"
+              margin="normal"
+              fullWidth
+              name="latitude"
+              placeholder="Ex: 50.200"
+              value={latitude}
+              onChange={(event) => setLatitude(event.target.value)}
+            />
+            <TextField
+              id="longitude"
+              label="Longitude"
+              variant="outlined"
+              margin="normal"
+              fullWidth
+              name="longitude"
+              placeholder="Ex: -23.550"
+              value={longitude}
+              onChange={(event) => setLongitude(event.target.value)}
+            />
+          </Stack>
         </div>
-      </div>
-      <button
-        onClick={handleSubmit}
-        type='button'
-        className='btn btn-primary mb-3'
-      >
-        Criar
-      </button>
-    </div>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose}>Cancelar</Button>
+        <Button type="submit" onClick={handleSubmit}>
+          Salvar
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 export default UserForm;
 UserForm.propTypes = {
   setReloadUsers: PropTypes.func.isRequired,
+};
+UserForm.propTypes = {
+  setOpen: PropTypes.func.isRequired,
+};
+UserForm.propTypes = {
+  open: PropTypes.bool.isRequired,
+};
+
+UserForm.propTypes = {
+  selectedUser: PropTypes.object,
+};
+
+UserForm.propTypes = {
+  setSelectedUser: PropTypes.func.isRequired,
 };

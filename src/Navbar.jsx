@@ -1,9 +1,8 @@
 function Navbar() {
   return (
-    <header className='navbar bg-success text-white'>
+    <header className='navbar text-white' style={{ backgroundColor: "black" }}>
       <nav className='d-flex'>
         <span className='header-text fs-3'>Usuarios</span>
-        <sub className='sub-header-text'>Coordenadas</sub>
       </nav>
     </header>
   );
