@@ -117,9 +117,9 @@ const UserForm = ({
       }}
     >
       <DialogTitle>Cadastrar novo usuario</DialogTitle>
-      <DialogContent>
+      <DialogContent >
         <DialogContentText></DialogContentText>
-        <div className="user-form">
+        <div>
           <TextField
             id="userName"
             label="Nome de Usuario"
